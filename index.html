@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Suivi des mesures – Maquette</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{color-scheme:light;--bg:#eef0f2;--sf:#fff;--tx:#1c2630;--mu:#55636f;--bd:#c9d1d8;--ac:#1c2630;--act:#fff;--ok:#1f7a3d;--okb:#dff3e5;--be:#8a5a00;--beb:#fdefc9;--no:#b3261e;--nob:#fbe0de;--rn:#2b5fa8;--rnb:#dde8f7;--ar:#b3261e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#12181e;--sf:#1b242c;--tx:#e6ebf0;--mu:#9aa8b4;--bd:#34414d;--ac:#e6ebf0;--act:#12181e;--ok:#6fd08c;--okb:#173a24;--be:#f1c35a;--beb:#40330f;--no:#ff8a80;--nob:#4a1f1c;--rn:#8db8f3;--rnb:#1c3150;--ar:#ff8a80}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:18px/1.4 "IBM Plex Sans",system-ui,sans-serif;display:flex;flex-direction:column;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+textarea,input{-webkit-user-select:text;user-select:text}
+header{background:var(--sf);border-bottom:1px solid var(--bd);padding:10px 24px;display:flex;gap:20px;align-items:center}
+header h1{font-size:20px;margin:0;font-weight:600}
+nav{display:flex;gap:8px;margin-left:auto}
+nav button{min-height:56px;padding:0 26px;border:2px solid var(--bd);background:transparent;color:var(--tx);border-radius:10px;font:inherit;font-weight:500;cursor:pointer}
+nav button.on{background:var(--ac);color:var(--act);border-color:var(--ac)}
+main{flex:1;min-height:0;padding:16px 24px}
+.view{display:grid;gap:16px;height:100%;min-height:0}
+.v-fab{grid-template-columns:minmax(440px,36%) 1fr}
+.v-qua{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr}
+.v-his{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr}
+.full{grid-column:1/-1}
+.pane{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:16px;overflow:auto;min-height:0}
+h2{font-size:19px;margin:0 0 10px;font-weight:600}
+h3{font-size:16px;margin:14px 0 8px;color:var(--mu);font-weight:600}
+label,.lb{display:block;font-size:15px;color:var(--mu);margin:12px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:52px;padding:0 18px;border:2px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:10px;font:inherit;cursor:pointer}
+.chip.on{background:var(--ac);color:var(--act);border-color:var(--ac);font-weight:600}
+.chip.ok.on{background:var(--ok);border-color:var(--ok);color:#fff}.chip.be.on{background:#c98a00;border-color:#c98a00;color:#fff}.chip.no.on{background:var(--no);border-color:var(--no);color:#fff}
+.chip.ar.on{background:var(--ar);border-color:var(--ar);color:#fff}
+.chips.big .chip{min-height:64px;flex:1;font-size:19px}
+textarea,input[type=date]{width:100%;font:inherit;padding:12px;border:2px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);min-height:52px}
+textarea{min-height:84px;resize:none}
+.b{font:inherit;min-height:60px;padding:0 28px;border-radius:10px;border:2px solid var(--ac);background:var(--ac);color:var(--act);cursor:pointer;font-weight:600}
+.b.s{background:transparent;color:var(--tx);border-color:var(--bd)}
+.b.w{width:100%;margin-top:14px}
+:focus-visible{outline:3px solid var(--rn);outline-offset:2px}
+.fl{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;align-items:center;margin-bottom:8px}.fl .lb{margin:0}
+.row{display:flex;gap:12px;align-items:center;padding:14px;border:2px solid var(--bd);border-left-width:8px;border-radius:10px;background:var(--bg);margin-bottom:10px;flex-wrap:wrap}
+.row.arret{border-left-color:var(--ar)}.row.click{cursor:pointer}.row.sel{border-color:var(--ac);border-left-color:var(--ac)}
+.row .t{font-weight:600}.row .m{color:var(--mu);font-size:15px}
+.grow{flex:1;min-width:220px}
+.tag{display:inline-block;padding:4px 12px;border-radius:99px;font-size:15px;font-weight:600;white-space:nowrap}
+.ok{background:var(--okb);color:var(--ok)}.be{background:var(--beb);color:var(--be)}.no{background:var(--nob);color:var(--no)}.rn{background:var(--rnb);color:var(--rn)}.wt{background:var(--bg);color:var(--mu);border:1px solid var(--bd)}.tag.ar{background:var(--ar);color:#fff}
+.chrono{font-variant-numeric:tabular-nums;font-weight:600;font-size:26px}
+.empty{color:var(--mu);padding:22px;text-align:center;border:2px dashed var(--bd);border-radius:10px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:24px;z-index:20}
+#modal.open{display:flex}
+#mb{background:var(--sf);border-radius:14px;padding:26px;max-width:760px;width:100%;max-height:92vh;overflow:auto}
+.kv{display:grid;grid-template-columns:190px 1fr;gap:8px 14px;margin:8px 0}.kv dt{color:var(--mu)}.kv dd{margin:0}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ac);color:var(--act);padding:16px 26px;border-radius:12px;display:none;z-index:30;max-width:90vw;font-weight:500}
+.hint{font-size:15px;color:var(--mu);margin:0 0 10px}
+@media(max-width:1000px){body{height:auto}.view{height:auto}.v-fab,.v-qua,.v-his{grid-template-columns:1fr;grid-template-rows:none}.pane{overflow:visible}}
+</style>
+</head>
+<body>
+<header><h1>Suivi des mesures – pièces usinées</h1><nav id="nav"></nav></header>
+<main id="app"></main>
+<div id="modal"><div id="mb"></div></div>
+<div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+var ATELIERS=["Disque","Rotor","Porte fusée"],LIGNES=["Disque 3","Disque 4","Flex 2","Grob 6","Grob 4"],
+CUS=["CU 1","CU 2","CU 3","CU 4","CU 5","CU 6","Tronçon 1","Tronçon 2"],
+TYPES=["Pièce de fréquentiel","Analyse complète","Analyse par fonction"],
+RES=["CONFORME","DANS LE BE","NON CONFORME"],RCLS={"CONFORME":"ok","DANS LE BE":"be","NON CONFORME":"no"};
+var H=36e5,now=Date.now();
+var D=[
+{id:1,at:"Porte fusée",li:"Grob 6",cu:"CU 3",ar:true,ty:TYPES[1],co:"Dérive cote alésage",cr:now-2*H,st:"attente"},
+{id:2,at:"Disque",li:"Disque 3",cu:"Tronçon 1",ar:false,ty:TYPES[0],co:"",cr:now-3*H,st:"attente"},
+{id:3,at:"Rotor",li:"Flex 2",cu:"Tronçon 2",ar:false,ty:TYPES[2],co:"Voile à vérifier",cr:now-1*H,st:"attente"},
+{id:4,at:"Porte fusée",li:"Grob 4",cu:"CU 1",ar:false,ty:TYPES[0],co:"",cr:now-4*H,st:"encours",d0:now-18*60000},
+{id:5,at:"Porte fusée",li:"Grob 4",cu:"CU 5",ar:true,ty:TYPES[1],co:"Reprise après changement d’outil",cr:now-26*H,st:"fini",d0:now-25*H,d1:now-24.5*H,re:"NON CONFORME",cq:"Cote Ø32 H7 hors tolérance, perpendicularité face B",fi:{ou:"OUI",ouc:"T12, T14",ne:"OUI",nec:"Copeaux sur le montage",rm:"CONFORME",rmc:"Jeu remesuré OK"}},
+{id:6,at:"Disque",li:"Disque 3",cu:"Tronçon 2",ar:false,ty:TYPES[0],co:"",cr:now-30*H,st:"fini",d0:now-29*H,d1:now-28.6*H,re:"CONFORME",cq:""},
+{id:7,at:"Rotor",li:"Flex 2",cu:"Tronçon 1",ar:false,ty:TYPES[2],co:"",cr:now-50*H,st:"fini",d0:now-49*H,d1:now-48.4*H,re:"DANS LE BE",cq:"Épaisseur proche mini"},
+{id:8,at:"Porte fusée",li:"Grob 6",cu:"CU 2",ar:false,ty:TYPES[1],co:"",cr:now-52*H,st:"fini",d0:now-51*H,d1:now-50.2*H,re:"NON CONFORME",cq:"Entraxe trous de fixation"}
+];
+var nid=9,tab="fab",selH=null,F={fab:{},qua:{},his:{}},N={at:"Disque",li:"Disque 3",cu:"Tronçon 1",ty:TYPES[0],ar:false,co:""};
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fd(t){return new Date(t).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
+function dur(ms){var s=Math.max(0,Math.floor(ms/1000)),m=Math.floor(s/60);return String(m).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function byId(i){return D.filter(function(r){return r.id===i})[0]}
+function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(function(){t.style.display="none"},3500)}
+function tag(c,t){return'<span class="tag '+c+'">'+t+'</span>'}
+function ligList(at){return at==="Porte fusée"?["Grob 4","Grob 6"]:at==="Rotor"?["Flex 2"]:["Disque 3","Disque 4"]}
+function cuList(at){return at==="Porte fusée"?CUS.slice(0,6):CUS.slice(6)}
+/* chips */
+function ch(id,list,v,cls){return'<div class="chips '+(cls||"")+'" id="'+id+'">'+list.map(function(x){return'<button type="button" class="chip '+(RCLS[x]||"")+(x===v?" on":"")+'" onclick="pick(this)">'+x+'</button>'}).join("")+'</div>'}
+function pick(e){e.parentNode.querySelectorAll(".chip").forEach(function(c){c.classList.remove("on")});e.classList.add("on")}
+function val(id){var e=document.querySelector("#"+id+" .on");return e?e.textContent:""}
+function nch(fld,list){return'<div class="chips">'+list.map(function(x){return'<button type="button" class="chip'+(N[fld]===x?" on":"")+'" onclick="setN(\''+fld+'\',\''+x+'\')">'+x+'</button>'}).join("")+'</div>'}
+function setN(f,v){N[f]=v;if(f==="at"){N.li=ligList(v)[0];N.cu=cuList(v)[0]}render()}
+function fch(k,fld,list,all){var c=F[k][fld]||"";return'<div class="chips"><button class="chip'+(c?"":" on")+'" onclick="sf(\''+k+'\',\''+fld+'\',\'\')">'+all+'</button>'+list.map(function(x){return'<button class="chip'+(c===x?" on":"")+'" onclick="sf(\''+k+'\',\''+fld+'\',\''+x+'\')">'+x+'</button>'}).join("")+'</div>'}
+function sf(k,n,v){F[k][n]=v;render()}
+function filt(list,k){var f=F[k];return list.filter(function(r){return(!f.at||r.at===f.at)&&(!f.li||r.li===f.li)&&(!f.cu||r.cu===f.cu)&&(!f.da||new Date(r.cr).toISOString().slice(0,10)>=f.da)&&(!f.fo||r.fi)})}
+function bar(k){var f=F[k];return'<div class="fl"><span class="lb">Atelier</span>'+fch(k,"at",ATELIERS,"Tous")+'</div><div class="fl"><span class="lb">Ligne</span>'+fch(k,"li",LIGNES,"Toutes")+'</div><div class="fl"><span class="lb">Centre / tronçon</span>'+fch(k,"cu",CUS,"Tous")+'</div>'+(k==="his"?'<div class="fl"><span class="lb">À partir du</span><div class="chips"><input type="date" style="width:220px" value="'+(f.da||"")+'" onchange="sf(\'his\',\'da\',this.value)"><button class="chip'+(f.fo?" on":"")+'" onclick="sf(\'his\',\'fo\','+(!f.fo)+')">Avec fiche d’analyse</button></div></div>':'')}
+function go(t){tab=t;render()}
+function render(){
+ $("nav").innerHTML=[["fab","Vue fabricant"],["qua","Vue qualité"],["his","Historique"]].map(function(x){return'<button class="'+(tab===x[0]?"on":"")+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'}).join("");
+ $("app").innerHTML=tab==="fab"?vFab():tab==="qua"?vQua():vHis();
+}
+function info(r){return'<div class="grow"><div class="t">'+r.at+' · '+r.li+' · '+r.cu+'</div><div class="m">'+r.ty+' · demandé le '+fd(r.cr)+(r.co?' · '+esc(r.co):'')+'</div></div>'}
+
+/* FABRICANT */
+function vFab(){
+ var form='<div class="pane"><h2>Nouvelle demande de mesure</h2><span class="lb">Atelier</span>'+nch("at",ATELIERS)+'<span class="lb">Ligne de production</span>'+nch("li",ligList(N.at))+'<span class="lb">'+(N.at==="Porte fusée"?"Centre d’usinage":"Tronçon")+'</span>'+nch("cu",cuList(N.at))+'<span class="lb">Type de mesure</span>'+nch("ty",TYPES)+
+ '<span class="lb">Ligne de production</span><div class="chips big"><button class="chip'+(N.ar?"":" on")+'" onclick="N.ar=false;render()">En production</button><button class="chip ar'+(N.ar?" on":"")+'" onclick="N.ar=true;render()">À l’arrêt (prioritaire)</button></div>'+
+ '<label for="n_co">Commentaires</label><textarea id="n_co" oninput="N.co=this.value">'+esc(N.co)+'</textarea><button class="b w" onclick="addReq()">Envoyer la demande</button></div>';
+ var l=filt(D,"fab");
+ var cur=l.filter(function(r){return r.st!=="fini"}).sort(function(a,b){return b.cr-a.cr});
+ var fin=l.filter(function(r){return r.st==="fini"}).sort(function(a,b){return b.d1-a.d1});
+ return'<div class="view v-fab">'+form+'<div class="pane"><h2>Mes demandes</h2>'+bar("fab")+'<h3>En cours</h3>'+(cur.length?cur.map(rowF).join(""):'<div class="empty">Aucune demande en cours pour ces filtres.</div>')+'<h3>Finalisées</h3><p class="hint">Touchez une mesure NON CONFORME pour documenter ou consulter sa fiche d’analyse.</p>'+(fin.length?fin.map(rowF).join(""):'<div class="empty">Aucune mesure finalisée pour ces filtres.</div>')+'</div></div>';
+}
+function rowF(r){
+ var s=r.st==="attente"?tag("wt","En attente"):r.st==="encours"?tag("rn","Mesure lancée")+' <span class="chrono" data-s="'+r.d0+'"></span>':tag(RCLS[r.re],r.re);
+ var nc=r.st==="fini"&&r.re==="NON CONFORME";
+ return'<div class="row '+(r.ar&&r.st!=="fini"?"arret":"")+(nc?" click":"")+'" '+(nc?'onclick="fiche('+r.id+')"':"")+'>'+info(r)+(r.ar?tag("ar","Ligne à l’arrêt"):"")+s+(r.cq&&r.st==="fini"?'<div class="m" style="flex-basis:100%">Caractéristiques : '+esc(r.cq)+'</div>':"")+(nc?(r.fi?tag("be","Fiche remplie"):tag("no","Fiche à remplir")):"")+'</div>';
+}
+function addReq(){D.push({id:nid++,at:N.at,li:N.li,cu:N.cu,ar:N.ar,ty:N.ty,co:N.co,cr:Date.now(),st:"attente"});N.ar=false;N.co="";toast("Demande envoyée à la qualité");render()}
+
+/* QUALITE */
+function vQua(){
+ var l=filt(D,"qua"),att=l.filter(function(r){return r.st==="attente"}).sort(function(a,b){return(b.ar-a.ar)||(a.cr-b.cr)}),run=l.filter(function(r){return r.st==="encours"}).sort(function(a,b){return a.d0-b.d0});
+ return'<div class="view v-qua"><div class="pane full">'+bar("qua")+'</div>'+
+ '<div class="pane"><h2>En attente ('+att.length+')</h2><p class="hint">Lignes à l’arrêt en premier, puis par ordre d’arrivée.</p>'+(att.length?att.map(function(r){return'<div class="row '+(r.ar?"arret":"")+'">'+info(r)+(r.ar?tag("ar","Ligne à l’arrêt"):"")+'<button class="b" onclick="start('+r.id+')">Lancer la mesure</button></div>'}).join(""):'<div class="empty">Aucune mesure en attente.</div>')+'</div>'+
+ '<div class="pane"><h2>Mesures en cours ('+run.length+')</h2>'+(run.length?run.map(function(r){return'<div class="row '+(r.ar?"arret":"")+'">'+info(r)+'<span class="chrono" data-s="'+r.d0+'"></span><button class="b" onclick="finish('+r.id+')">Saisir le résultat</button></div>'}).join(""):'<div class="empty">Aucune mesure en cours.</div>')+'</div></div>';
+}
+function start(i){var r=byId(i);r.st="encours";r.d0=Date.now();toast("Mesure lancée – le fabricant ("+r.li+") est averti");render()}
+function modal(h){$("mb").innerHTML=h;$("modal").classList.add("open")}
+function closeM(){$("modal").classList.remove("open")}
+$("modal").addEventListener("click",function(e){if(e.target===this)closeM()});
+function finish(i){var r=byId(i);
+ modal('<h2>Résultat de mesure</h2><p class="hint">'+r.at+' · '+r.li+' · '+r.cu+' · '+r.ty+'</p><span class="lb">Résultat</span>'+ch("f_re",RES,"","big")+'<label for="f_cq">Commentaire (caractéristiques non conformes)</label><textarea id="f_cq"></textarea><div style="display:flex;gap:12px;margin-top:16px"><button class="b" onclick="saveRes('+i+')">Valider la mesure</button><button class="b s" onclick="closeM()">Annuler</button></div>')}
+function saveRes(i){var v=val("f_re");if(!v){toast("Choisissez un résultat");return}var r=byId(i);r.st="fini";r.d1=Date.now();r.re=v;r.cq=$("f_cq").value;closeM();toast("Résultat envoyé au fabricant : "+v);render()}
+
+/* FICHE D'ANALYSE */
+function fiche(i){var r=byId(i),f=r.fi||{};
+ modal('<h2>Fiche d’analyse – mesure non conforme</h2><p class="hint">'+r.at+' · '+r.li+' · '+r.cu+' · mesuré le '+fd(r.d1)+'<br>Caractéristiques : '+esc(r.cq||"–")+'</p>'+
+ '<span class="lb">Outil changé</span>'+ch("a_ou",["OUI","NON"],f.ou,"big")+'<textarea id="a_ouc" placeholder="N° d’outil concernés">'+esc(f.ouc)+'</textarea>'+
+ '<span class="lb">Nettoyage des montages</span>'+ch("a_ne",["OUI","NON"],f.ne,"big")+'<textarea id="a_nec" placeholder="Constat">'+esc(f.nec)+'</textarea>'+
+ '<span class="lb">Remesure d’un jeu</span>'+ch("a_rm",["LANCÉ","CONFORME","NON CONFORME"],f.rm,"big")+
+ '<div style="display:flex;gap:12px;margin-top:16px"><button class="b" onclick="saveF('+i+')">Enregistrer la fiche</button><button class="b s" onclick="closeM()">Fermer</button></div>')}
+function saveF(i){byId(i).fi={ou:val("a_ou"),ouc:$("a_ouc").value,ne:val("a_ne"),nec:$("a_nec").value,rm:val("a_rm"),rmc:""};closeM();toast("Fiche d’analyse enregistrée");render()}
+
+/* HISTORIQUE */
+function vHis(){
+ var l=filt(D.filter(function(r){return r.st==="fini"}),"his").sort(function(a,b){return b.d1-a.d1});
+ var list=l.length?l.map(function(r){return'<div class="row click'+(selH===r.id?" sel":"")+'" onclick="selH='+r.id+';render()"><div class="grow"><div class="t">'+fd(r.d1)+' · '+r.li+' · '+r.cu+'</div><div class="m">'+r.at+' · '+r.ty+'</div></div>'+tag(RCLS[r.re],r.re)+(r.fi?tag("rn","Fiche"):"")+'</div>'}).join(""):'<div class="empty">Aucune mesure ne correspond aux filtres.</div>';
+ return'<div class="view v-his"><div class="pane full">'+bar("his")+'</div><div class="pane"><h2>Mesures ('+l.length+')</h2>'+list+'</div><div class="pane">'+(selH&&byId(selH)?detail(byId(selH)):'<div class="empty">Touchez une mesure pour voir son détail et sa fiche d’analyse.</div>')+'</div></div>';
+}
+function detail(r){var f=r.fi;
+ return'<h2>Détail de la mesure</h2><dl class="kv"><dt>Atelier</dt><dd>'+r.at+'</dd><dt>Ligne</dt><dd>'+r.li+'</dd><dt>Centre / tronçon</dt><dd>'+r.cu+'</dd><dt>Type</dt><dd>'+r.ty+'</dd><dt>Ligne à l’arrêt</dt><dd>'+(r.ar?"Oui":"Non")+'</dd><dt>Demande</dt><dd>'+fd(r.cr)+(r.co?' – '+esc(r.co):"")+'</dd><dt>Début → fin</dt><dd>'+fd(r.d0)+' → '+fd(r.d1)+' ('+dur(r.d1-r.d0)+')</dd><dt>Résultat</dt><dd>'+tag(RCLS[r.re],r.re)+'</dd><dt>Caractéristiques</dt><dd>'+esc(r.cq||"–")+'</dd></dl>'+
+ (f?'<h2 style="margin-top:18px">Fiche d’analyse</h2><dl class="kv"><dt>Outil changé</dt><dd>'+f.ou+(f.ouc?' – '+esc(f.ouc):"")+'</dd><dt>Nettoyage montages</dt><dd>'+f.ne+(f.nec?' – '+esc(f.nec):"")+'</dd><dt>Remesure d’un jeu</dt><dd>'+f.rm+'</dd></dl>':'<p class="hint">Pas de fiche d’analyse pour cette mesure.</p>');
+}
+setInterval(function(){document.querySelectorAll(".chrono").forEach(function(e){e.textContent=dur(Date.now()-Number(e.dataset.s))})},1000);
+
+/* ===== Branchement Supabase ===== */
+var SB_URL="https://virgdrlbcpjmheqtnpak.supabase.co",SB_KEY="sb_publishable_XZ4_F6RyEBDG41V3hIEZaA_mXiqvcmZ";
+var sb=supabase.createClient(SB_URL,SB_KEY),subOK=false;
+D=[];
+function fromRow(x){return{id:x.id,at:x.atelier,li:x.ligne,cu:x.cu,ar:x.arret,ty:x.type_mesure,co:x.commentaire||"",cr:Date.parse(x.created_at),st:x.statut,d0:x.debut?Date.parse(x.debut):null,d1:x.fin?Date.parse(x.fin):null,re:x.resultat,cq:x.comm_qualite||"",fi:x.fiche}}
+async function load(){
+ var q=await sb.from("demandes").select("*").order("created_at",{ascending:false});
+ if(q.error){toast("Erreur de chargement : "+q.error.message);return}
+ var prev={};D.forEach(function(r){prev[r.id]=r.st});
+ D=q.data.map(fromRow);
+ D.forEach(function(r){if(prev[r.id]==="attente"&&r.st==="encours")toast("Mesure lancée : "+r.li+" · "+r.cu)});
+ render();
+}
+async function upd(i,patch,msg){var e=await sb.from("demandes").update(patch).eq("id",i);if(e.error){toast("Erreur : "+e.error.message);return false}if(msg)toast(msg);load();return true}
+async function addReq(){
+ var e=await sb.from("demandes").insert({atelier:N.at,ligne:N.li,cu:N.cu,arret:N.ar,type_mesure:N.ty,commentaire:N.co});
+ if(e.error){toast("Erreur : "+e.error.message);return}
+ N.ar=false;N.co="";toast("Demande envoyée à la qualité");load();
+}
+async function start(i){
+ var e=await sb.from("demandes").update({statut:"encours",debut:new Date().toISOString()}).eq("id",i).eq("statut","attente").select();
+ if(e.error){toast("Erreur : "+e.error.message);return}
+ toast(e.data.length?"Mesure lancée – le fabricant est averti":"Cette mesure a déjà été lancée");load();
+}
+function saveRes(i){var v=val("f_re");if(!v){toast("Choisissez un résultat");return}var c=$("f_cq").value;closeM();upd(i,{statut:"fini",fin:new Date().toISOString(),resultat:v,comm_qualite:c},"Résultat envoyé au fabricant : "+v)}
+function saveF(i){var f={ou:val("a_ou"),ouc:$("a_ouc").value,ne:val("a_ne"),nec:$("a_nec").value,rm:val("a_rm"),rmc:""};closeM();upd(i,{fiche:f},"Fiche d’analyse enregistrée")}
+/* connexion */
+var IS="width:100%;font:inherit;padding:12px;border:2px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);min-height:52px;margin-bottom:12px";
+function loginView(){
+ $("nav").innerHTML="";
+ $("app").innerHTML='<div class="pane" style="max-width:520px;margin:40px auto;height:auto"><h2>Connexion</h2><label for="lm">E-mail</label><input id="lm" type="email" autocomplete="username" style="'+IS+'"><label for="lp">Mot de passe</label><input id="lp" type="password" autocomplete="current-password" style="'+IS+'"><button class="b w" onclick="doLogin()">Se connecter</button></div>';
+}
+async function doLogin(){
+ var r=await sb.auth.signInWithPassword({email:$("lm").value.trim(),password:$("lp").value});
+ if(r.error){toast("Connexion refusée : e-mail ou mot de passe incorrect");return}
+ init();
+}
+async function logout(){await sb.auth.signOut();D=[];loginView()}
+var _render=render;
+render=function(){_render();$("nav").innerHTML+='<button onclick="logout()">Déconnexion</button>'};
+async function init(){
+ var s=await sb.auth.getSession();
+ if(!s.data.session){loginView();return}
+ await load();
+ if(!subOK){subOK=true;sb.channel("demandes-live").on("postgres_changes",{event:"*",schema:"public",table:"demandes"},load).subscribe()}
+}
+init();
+</script>
+</body>
+</html>

@@ -63,6 +63,7 @@ textarea{min-height:84px;resize:none}
 <div id="modal"><div id="mb"></div></div>
 <div id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
 <script>
 var ATELIERS=["Disque","Rotor","Porte fusée"],LIGNES=["Disque 3","Disque 4","Flex 2","Grob 6","Grob 4"],
 CUS=["CU 1","CU 2","CU 3","CU 4","CU 5","CU 6","Tronçon 1","Tronçon 2"],
@@ -96,9 +97,9 @@ function val(id){var e=document.querySelector("#"+id+" .on");return e?e.textCont
 function nch(fld,list){return'<div class="chips">'+list.map(function(x){return'<button type="button" class="chip'+(N[fld]===x?" on":"")+'" onclick="setN(\''+fld+'\',\''+x+'\')">'+x+'</button>'}).join("")+'</div>'}
 function setN(f,v){N[f]=v;if(f==="at"){N.li=ligList(v)[0];N.cu=cuList(v)[0]}render()}
 function fch(k,fld,list,all){var c=F[k][fld]||"";return'<div class="chips"><button class="chip'+(c?"":" on")+'" onclick="sf(\''+k+'\',\''+fld+'\',\'\')">'+all+'</button>'+list.map(function(x){return'<button class="chip'+(c===x?" on":"")+'" onclick="sf(\''+k+'\',\''+fld+'\',\''+x+'\')">'+x+'</button>'}).join("")+'</div>'}
-function sf(k,n,v){F[k][n]=v;render()}
+function sf(k,n,v){F[k][n]=v;if(n==="at"){var f=F[k];if(f.li&&v&&ligList(v).indexOf(f.li)<0)f.li="";if(f.cu&&v&&cuList(v).indexOf(f.cu)<0)f.cu=""}render()}
 function filt(list,k){var f=F[k];return list.filter(function(r){return(!f.at||r.at===f.at)&&(!f.li||r.li===f.li)&&(!f.cu||r.cu===f.cu)&&(!f.da||new Date(r.cr).toISOString().slice(0,10)>=f.da)&&(!f.fo||r.fi)})}
-function bar(k){var f=F[k];return'<div class="fl"><span class="lb">Atelier</span>'+fch(k,"at",ATELIERS,"Tous")+'</div><div class="fl"><span class="lb">Ligne</span>'+fch(k,"li",LIGNES,"Toutes")+'</div><div class="fl"><span class="lb">Centre / tronçon</span>'+fch(k,"cu",CUS,"Tous")+'</div>'+(k==="his"?'<div class="fl"><span class="lb">À partir du</span><div class="chips"><input type="date" style="width:220px" value="'+(f.da||"")+'" onchange="sf(\'his\',\'da\',this.value)"><button class="chip'+(f.fo?" on":"")+'" onclick="sf(\'his\',\'fo\','+(!f.fo)+')">Avec fiche d’analyse</button></div></div>':'')}
+function bar(k){var f=F[k];return'<div class="fl"><span class="lb">Atelier</span>'+fch(k,"at",ATELIERS,"Tous")+'</div><div class="fl"><span class="lb">Ligne</span>'+fch(k,"li",f.at?ligList(f.at):LIGNES,"Toutes")+'</div><div class="fl"><span class="lb">Centre / tronçon</span>'+fch(k,"cu",f.at?cuList(f.at):CUS,"Tous")+'</div>'+(k==="his"?'<div class="fl"><span class="lb">À partir du</span><div class="chips"><input type="date" style="width:220px" value="'+(f.da||"")+'" onchange="sf(\'his\',\'da\',this.value)"><button class="chip'+(f.fo?" on":"")+'" onclick="sf(\'his\',\'fo\','+(!f.fo)+')">Avec fiche d’analyse</button></div></div>':'')}
 function go(t){tab=t;render()}
 function render(){
  $("nav").innerHTML=[["fab","Vue fabricant"],["qua","Vue qualité"],["his","Historique"]].map(function(x){return'<button class="'+(tab===x[0]?"on":"")+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'}).join("");
@@ -160,7 +161,6 @@ function detail(r){var f=r.fi;
 setInterval(function(){document.querySelectorAll(".chrono").forEach(function(e){e.textContent=dur(Date.now()-Number(e.dataset.s))})},1000);
 
 /* ===== Branchement Supabase ===== */
-var SB_URL="https://virgdrlbcpjmheqtnpak.supabase.co",SB_KEY="sb_publishable_XZ4_F6RyEBDG41V3hIEZaA_mXiqvcmZ";
 var sb=supabase.createClient(SB_URL,SB_KEY),subOK=false;
 D=[];
 function fromRow(x){return{id:x.id,at:x.atelier,li:x.ligne,cu:x.cu,ar:x.arret,ty:x.type_mesure,co:x.commentaire||"",cr:Date.parse(x.created_at),st:x.statut,d0:x.debut?Date.parse(x.debut):null,d1:x.fin?Date.parse(x.fin):null,re:x.resultat,cq:x.comm_qualite||"",fi:x.fiche}}
@@ -197,13 +197,136 @@ async function doLogin(){
  init();
 }
 async function logout(){await sb.auth.signOut();D=[];loginView()}
-var _render=render;
-render=function(){_render();$("nav").innerHTML+='<button onclick="logout()">Déconnexion</button>'};
 async function init(){
  var s=await sb.auth.getSession();
  if(!s.data.session){loginView();return}
  await load();
  if(!subOK){subOK=true;sb.channel("demandes-live").on("postgres_changes",{event:"*",schema:"public",table:"demandes"},load).subscribe()}
+}
+
+/* ===== Configuration : ateliers, lignes, centres, questions ===== */
+var CFG={ats:[],lis:[],cus:[],qs:[]},KM={at:"ats",li:"lis",cu:"cus"},TM={at:"ateliers",li:"lignes",cu:"centres"},TL={oui_non:"Oui / Non",choix:"Choix",texte:"Texte libre"};
+(function(){var e=document.createElement("style");e.textContent=".b.sm{min-height:48px;padding:0 16px;font-size:16px}";document.head.appendChild(e)})();
+function byOrd(a,b){return(a.ordre-b.ordre)||(a.id-b.id)}
+function clean(v){return String(v||"").replace(/['"\\<>&`]/g,"").trim()}
+function atNames(all){return CFG.ats.filter(function(a){return all||a.actif}).sort(byOrd).map(function(a){return a.nom})}
+function ligList(at,all){var a=CFG.ats.filter(function(x){return x.nom===at})[0];return a?CFG.lis.filter(function(l){return l.atelier_id===a.id&&(all||l.actif)}).sort(byOrd).map(function(l){return l.nom}):[]}
+function cuList(li,all){var l=CFG.lis.filter(function(x){return x.nom===li})[0];return l?CFG.cus.filter(function(c){return c.ligne_id===l.id&&(all||c.actif)}).sort(byOrd).map(function(c){return c.nom}):[]}
+function allLignes(){return CFG.lis.slice().sort(byOrd).map(function(l){return l.nom})}
+function cuAll(at){var seen={},o=[];(at?ligList(at,true):allLignes()).forEach(function(l){cuList(l,true).forEach(function(c){if(!seen[c]){seen[c]=1;o.push(c)}})});return o}
+function fixN(){var a=atNames();if(a.indexOf(N.at)<0)N.at=a[0]||"";var l=ligList(N.at);if(l.indexOf(N.li)<0)N.li=l[0]||"";var c=cuList(N.li);if(c.indexOf(N.cu)<0)N.cu=c[0]||""}
+function setN(f,v){N[f]=v;if(f==="at"){N.li=ligList(v)[0]||"";N.cu=cuList(N.li)[0]||""}if(f==="li")N.cu=cuList(v)[0]||"";render()}
+function sf(k,n,v){var f=F[k];f[n]=v;if(n==="at"&&v&&f.li&&ligList(v,true).indexOf(f.li)<0)f.li="";if(n==="at"||n==="li"){var ok=f.li?cuList(f.li,true):cuAll(f.at);if(f.cu&&ok.indexOf(f.cu)<0)f.cu=""}render()}
+function bar(k){var f=F[k];return'<div class="fl"><span class="lb">Atelier</span>'+fch(k,"at",atNames(true),"Tous")+'</div><div class="fl"><span class="lb">Ligne</span>'+fch(k,"li",f.at?ligList(f.at,true):allLignes(),"Toutes")+'</div><div class="fl"><span class="lb">Centre</span>'+fch(k,"cu",f.li?cuList(f.li,true):cuAll(f.at),"Tous")+'</div>'+(k==="his"?'<div class="fl"><span class="lb">À partir du</span><div class="chips"><input type="date" style="width:220px" value="'+(f.da||"")+'" onchange="sf(\'his\',\'da\',this.value)"><button class="chip'+(f.fo?" on":"")+'" onclick="sf(\'his\',\'fo\','+(!f.fo)+')">Avec fiche d’analyse</button></div></div>':'')}
+async function loadCfg(){
+ var r=await Promise.all([sb.from("ateliers").select("*"),sb.from("lignes").select("*"),sb.from("centres").select("*"),sb.from("questions").select("*")]);
+ var e=r.filter(function(x){return x.error})[0];
+ if(e){toast("Erreur de configuration : "+e.error.message+" (schema-config.sql exécuté ?)");return}
+ CFG={ats:r[0].data,lis:r[1].data,cus:r[2].data,qs:r[3].data};
+}
+async function ins(t,row){var e=await sb.from(t).insert(row);if(e.error){toast("Erreur : "+e.error.message);return false}await loadCfg();render();return true}
+async function updT(t,id,patch){var e=await sb.from(t).update(patch).eq("id",id);if(e.error){toast("Erreur : "+e.error.message);return false}await loadCfg();render();return true}
+function askText(t,init,cb){window._cb=cb;modal('<h2>'+t+'</h2><p class="hint">Les apostrophes droites et guillemets sont retirés ; utilisez ’ si besoin.</p><input id="at_in" value="'+esc(init)+'" style="'+IS+'"><div style="display:flex;gap:12px"><button class="b" onclick="okText()">Valider</button><button class="b s" onclick="closeM()">Annuler</button></div>');setTimeout(function(){var e=$("at_in");if(e)e.focus()},50)}
+function okText(){var v=clean($("at_in").value);if(!v)return;closeM();window._cb(v)}
+function nextOrd(a){return a.reduce(function(m,x){return Math.max(m,x.ordre)},0)+1}
+function addAt(){askText("Nouvel atelier","",function(v){ins("ateliers",{nom:v,ordre:nextOrd(CFG.ats)})})}
+function addLi(aid){askText("Nouvelle ligne","",function(v){ins("lignes",{atelier_id:aid,nom:v,ordre:nextOrd(CFG.lis)})})}
+function addCu(lid){askText("Nouveau centre / tronçon","",function(v){ins("centres",{ligne_id:lid,nom:v,ordre:nextOrd(CFG.cus.filter(function(c){return c.ligne_id===lid}))})})}
+function tog(kind,id){var it=CFG[KM[kind]].filter(function(x){return x.id===id})[0];updT(TM[kind],id,{actif:!it.actif})}
+function ren(kind,id){
+ var it=CFG[KM[kind]].filter(function(x){return x.id===id})[0];
+ askText("Renommer « "+it.nom+" »",it.nom,async function(v){
+  if(v===it.nom)return;
+  var ok=await updT(TM[kind],id,{nom:v});if(!ok)return;
+  var q;
+  if(kind==="at")q=sb.from("demandes").update({atelier:v}).eq("atelier",it.nom);
+  else if(kind==="li")q=sb.from("demandes").update({ligne:v}).eq("ligne",it.nom);
+  else{var l=CFG.lis.filter(function(x){return x.id===it.ligne_id})[0];q=sb.from("demandes").update({cu:v}).eq("cu",it.nom).eq("ligne",l.nom)}
+  var e=await q;
+  if(e.error)toast("Renommé, mais l’historique n’a pas pu être mis à jour : "+e.error.message);else{toast("Renommé, historique mis à jour");load()}
+ })}
+function rowC(lv,nom,actif,kind,id,al,ac){return'<div class="row" style="margin-left:'+lv*28+'px;'+(actif?"":"opacity:.55")+'"><div class="grow t">'+esc(nom)+(actif?"":" "+tag("wt","Masqué"))+'</div>'+(al?'<button class="b s sm" onclick="'+ac+'">'+al+'</button>':"")+'<button class="b s sm" onclick="ren(\''+kind+'\','+id+')">Renommer</button><button class="b s sm" onclick="tog(\''+kind+'\','+id+')">'+(actif?"Masquer":"Réactiver")+'</button></div>'}
+function vCfg(){
+ var h='<div class="view" style="grid-template-columns:1fr 1fr"><div class="pane"><h2>Ateliers, lignes et centres</h2><p class="hint">« Masquer » retire l’élément des formulaires mais garde l’historique.</p>';
+ CFG.ats.slice().sort(byOrd).forEach(function(a){
+  h+=rowC(0,a.nom,a.actif,"at",a.id,"+ Ligne","addLi("+a.id+")");
+  CFG.lis.filter(function(l){return l.atelier_id===a.id}).sort(byOrd).forEach(function(l){
+   h+=rowC(1,l.nom,l.actif,"li",l.id,"+ Centre","addCu("+l.id+")");
+   CFG.cus.filter(function(c){return c.ligne_id===l.id}).sort(byOrd).forEach(function(c){h+=rowC(2,c.nom,c.actif,"cu",c.id)})})});
+ h+='<button class="b w" onclick="addAt()">+ Ajouter un atelier</button></div><div class="pane"><h2>Fiche d’analyse : questions</h2><p class="hint">Ces questions s’affichent dans la fiche des mesures non conformes.</p>';
+ CFG.qs.slice().sort(byOrd).forEach(function(q){
+  h+='<div class="row" style="'+(q.actif?"":"opacity:.55")+'"><div class="grow"><div class="t">'+esc(q.libelle)+(q.actif?"":" "+tag("wt","Masquée"))+'</div><div class="m">'+TL[q.type]+(q.type==="choix"?" : "+esc((q.options||[]).join(" / ")):"")+(q.type!=="texte"&&q.commentaire?" · avec commentaire":"")+'</div></div><button class="b s sm" onclick="mvQ('+q.id+',-1)">↑</button><button class="b s sm" onclick="mvQ('+q.id+',1)">↓</button><button class="b s sm" onclick="editQ('+q.id+')">Modifier</button><button class="b s sm" onclick="togQ('+q.id+')">'+(q.actif?"Masquer":"Réactiver")+'</button></div>'});
+ return h+'<button class="b w" onclick="editQ(0)">+ Ajouter une question</button></div></div>';
+}
+function togQ(id){var q=CFG.qs.filter(function(x){return x.id===id})[0];updT("questions",id,{actif:!q.actif})}
+async function mvQ(id,d){var l=CFG.qs.slice().sort(byOrd),i=l.findIndex(function(x){return x.id===id}),j=i+d;if(j<0||j>=l.length)return;await updT("questions",l[i].id,{ordre:j+1});await updT("questions",l[j].id,{ordre:i+1})}
+function editQ(id){
+ var q=id?CFG.qs.filter(function(x){return x.id===id})[0]:{libelle:"",type:"oui_non",options:[],commentaire:true};
+ modal('<h2>'+(id?"Modifier la question":"Nouvelle question")+'</h2><label for="qe_l">Question</label><input id="qe_l" value="'+esc(q.libelle)+'" style="'+IS+'"><span class="lb">Type de réponse</span>'+ch("qe_t",["Oui / Non","Choix","Texte libre"],TL[q.type],"big")+'<label for="qe_o">Choix possibles (un par ligne, pour le type « Choix »)</label><textarea id="qe_o">'+esc((q.options||[]).join("\n"))+'</textarea><span class="lb">Commentaire</span>'+ch("qe_c",["Avec commentaire","Sans commentaire"],q.commentaire?"Avec commentaire":"Sans commentaire","big")+'<div style="display:flex;gap:12px;margin-top:16px"><button class="b" onclick="saveQ('+id+')">Enregistrer</button><button class="b s" onclick="closeM()">Annuler</button></div>')}
+async function saveQ(id){
+ var t=val("qe_t"),ty=t==="Choix"?"choix":t==="Texte libre"?"texte":"oui_non",l=$("qe_l").value.trim(),o=$("qe_o").value.split(/\n|,/).map(function(x){return clean(x)}).filter(Boolean);
+ if(!l){toast("Saisissez la question");return}
+ if(ty==="choix"&&o.length<2){toast("Indiquez au moins 2 choix");return}
+ var row={libelle:l,type:ty,options:ty==="choix"?o:[],commentaire:val("qe_c")==="Avec commentaire"};
+ closeM();
+ if(id)await updT("questions",id,row);else{row.ordre=nextOrd(CFG.qs);await ins("questions",row)}
+}
+/* fiche d'analyse dynamique */
+function normFiche(f){
+ if(Array.isArray(f))return f;
+ if(f&&typeof f==="object")return[{l:"Outil changé",v:f.ou,c:f.ouc},{l:"Nettoyage des montages",v:f.ne,c:f.nec},{l:"Remesure d’un jeu",v:f.rm,c:f.rmc}].filter(function(x){return x.v});
+ return[];
+}
+function getAns(a,q){return a.filter(function(x){return x.q===q.id||(x.q==null&&x.l===q.libelle)})[0]||{}}
+function actQs(){return CFG.qs.filter(function(q){return q.actif}).sort(byOrd)}
+function fiche(i){
+ var r=byId(i),a=normFiche(r.fi),qs=actQs();
+ var h='<h2>Fiche d’analyse – mesure non conforme</h2><p class="hint">'+r.at+' · '+r.li+' · '+r.cu+' · mesuré le '+fd(r.d1)+'<br>Caractéristiques : '+esc(r.cq||"–")+'</p>';
+ if(!qs.length)h+='<div class="empty">Aucune question active. Ajoutez-en dans l’onglet Configuration.</div>';
+ qs.forEach(function(q){
+  var x=getAns(a,q);h+='<span class="lb">'+esc(q.libelle)+'</span>';
+  if(q.type==="texte")h+='<textarea id="t_'+q.id+'">'+esc(x.v)+'</textarea>';
+  else{h+=ch("q_"+q.id,q.type==="choix"?q.options:["OUI","NON"],x.v,"big");if(q.commentaire)h+='<textarea id="c_'+q.id+'" placeholder="Commentaire" style="margin-top:8px">'+esc(x.c)+'</textarea>'}});
+ modal(h+'<div style="display:flex;gap:12px;margin-top:16px"><button class="b" onclick="saveF('+i+')">Enregistrer la fiche</button><button class="b s" onclick="closeM()">Fermer</button></div>');
+}
+function saveF(i){
+ var r=byId(i),a=normFiche(r.fi),qs=actQs(),out=[];
+ qs.forEach(function(q){var v=q.type==="texte"?$("t_"+q.id).value:val("q_"+q.id);out.push({q:q.id,l:q.libelle,v:v,c:(q.type!=="texte"&&q.commentaire)?$("c_"+q.id).value:""})});
+ a.forEach(function(x){if(!qs.some(function(q){return x.q===q.id||(x.q==null&&x.l===q.libelle)}))out.push(x)});
+ closeM();upd(i,{fiche:out},"Fiche d’analyse enregistrée");
+}
+function detail(r){
+ var a=normFiche(r.fi);
+ return'<h2>Détail de la mesure</h2><dl class="kv"><dt>Atelier</dt><dd>'+r.at+'</dd><dt>Ligne</dt><dd>'+r.li+'</dd><dt>Centre / tronçon</dt><dd>'+r.cu+'</dd><dt>Type</dt><dd>'+r.ty+'</dd><dt>Ligne à l’arrêt</dt><dd>'+(r.ar?"Oui":"Non")+'</dd><dt>Demande</dt><dd>'+fd(r.cr)+(r.co?' – '+esc(r.co):"")+'</dd><dt>Début → fin</dt><dd>'+fd(r.d0)+' → '+fd(r.d1)+' ('+dur(r.d1-r.d0)+')</dd><dt>Résultat</dt><dd>'+tag(RCLS[r.re],r.re)+'</dd><dt>Caractéristiques</dt><dd>'+esc(r.cq||"–")+'</dd></dl>'+
+ (r.fi?'<h2 style="margin-top:18px">Fiche d’analyse</h2><dl class="kv">'+a.map(function(x){return'<dt>'+esc(x.l)+'</dt><dd>'+esc(x.v)+(x.c?' – '+esc(x.c):"")+'</dd>'}).join("")+'</dl>':'<p class="hint">Pas de fiche d’analyse pour cette mesure.</p>');
+}
+/* vue fabricant (formulaire dynamique) */
+function vFab(){
+ fixN();
+ var form='<div class="pane"><h2>Nouvelle demande de mesure</h2><span class="lb">Atelier</span>'+nch("at",atNames())+'<span class="lb">Ligne de production</span>'+nch("li",ligList(N.at))+'<span class="lb">Centre d’usinage / tronçon</span>'+nch("cu",cuList(N.li))+'<span class="lb">Type de mesure</span>'+nch("ty",TYPES)+
+ '<span class="lb">État de la ligne</span><div class="chips big"><button class="chip'+(N.ar?"":" on")+'" onclick="N.ar=false;render()">En production</button><button class="chip ar'+(N.ar?" on":"")+'" onclick="N.ar=true;render()">À l’arrêt (prioritaire)</button></div>'+
+ '<label for="n_co">Commentaires</label><textarea id="n_co" oninput="N.co=this.value">'+esc(N.co)+'</textarea><button class="b w" onclick="addReq()">Envoyer la demande</button></div>';
+ var l=filt(D,"fab");
+ var cur=l.filter(function(r){return r.st!=="fini"}).sort(function(a,b){return b.cr-a.cr});
+ var fin=l.filter(function(r){return r.st==="fini"}).sort(function(a,b){return b.d1-a.d1});
+ return'<div class="view v-fab">'+form+'<div class="pane"><h2>Mes demandes</h2>'+bar("fab")+'<h3>En cours</h3>'+(cur.length?cur.map(rowF).join(""):'<div class="empty">Aucune demande en cours pour ces filtres.</div>')+'<h3>Finalisées</h3><p class="hint">Touchez une mesure NON CONFORME pour documenter ou consulter sa fiche d’analyse.</p>'+(fin.length?fin.map(rowF).join(""):'<div class="empty">Aucune mesure finalisée pour ces filtres.</div>')+'</div></div>';
+}
+async function addReq(){
+ if(!N.li||!N.cu){toast("Choisissez une ligne et un centre");return}
+ var e=await sb.from("demandes").insert({atelier:N.at,ligne:N.li,cu:N.cu,arret:N.ar,type_mesure:N.ty,commentaire:N.co});
+ if(e.error){toast("Erreur : "+e.error.message);return}
+ N.ar=false;N.co="";toast("Demande envoyée à la qualité");load();
+}
+function render(){
+ $("nav").innerHTML=[["fab","Vue fabricant"],["qua","Vue qualité"],["his","Historique"],["cfg","Configuration"]].map(function(x){return'<button class="'+(tab===x[0]?"on":"")+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'}).join("")+'<button onclick="logout()">Déconnexion</button>';
+ $("app").innerHTML=tab==="fab"?vFab():tab==="qua"?vQua():tab==="his"?vHis():vCfg();
+}
+async function init(){
+ var s=await sb.auth.getSession();
+ if(!s.data.session){loginView();return}
+ await loadCfg();await load();
+ if(!subOK){subOK=true;var c=sb.channel("demandes-live").on("postgres_changes",{event:"*",schema:"public",table:"demandes"},load);
+  ["ateliers","lignes","centres","questions"].forEach(function(t){c=c.on("postgres_changes",{event:"*",schema:"public",table:t},function(){loadCfg().then(render)})});c.subscribe()}
 }
 init();
 </script>
